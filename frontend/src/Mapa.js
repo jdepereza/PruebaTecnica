@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -55,12 +55,53 @@ export default function Mapa() {
   const [loading, setLoading] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [clickMarker, setClickMarker] = useState(null);
+  const [countries, setCountries] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [countrySearch, setCountrySearch] = useState('');
   const mapRef = useRef(null);
   
   // Referencia para el temporizador de debounce
   const searchTimeoutRef = useRef(null);
   // Cache para almacenar resultados de búsquedas previas
   const searchCacheRef = useRef({});
+  
+  // Cargar la lista de países al montar el componente
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setLoadingCountries(true);
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,capital,latlng,flags');
+        const data = await response.json();
+        
+        // Ordenar países por nombre
+        const sortedCountries = data.sort((a, b) => 
+          a.name.common.localeCompare(b.name.common)
+        );
+        
+        setCountries(sortedCountries);
+        setFilteredCountries(sortedCountries);
+        setLoadingCountries(false);
+      } catch (error) {
+        console.error("Error al cargar los países:", error);
+        setLoadingCountries(false);
+      }
+    };
+    
+    fetchCountries();
+  }, []);
+  
+  // Filtrar países según la búsqueda
+  useEffect(() => {
+    if (countrySearch.trim() === '') {
+      setFilteredCountries(countries);
+    } else {
+      const filtered = countries.filter(country => 
+        country.name.common.toLowerCase().includes(countrySearch.toLowerCase())
+      );
+      setFilteredCountries(filtered);
+    }
+  }, [countrySearch, countries]);
   
   // Función para manejar la búsqueda de sugerencias con debounce y caché
   const handleSearchChange = (event) => {
@@ -167,6 +208,56 @@ export default function Mapa() {
     setSuggestions([]);
   };
 
+  // Función para seleccionar un país
+  const handleCountrySelect = (country) => {
+    if (country.latlng && country.latlng.length === 2) {
+      // Guardar datos para AWS Lambda
+      const countryData = {
+        name: country.name.common,
+        latlng: country.latlng,
+        capital: country.capital ? country.capital[0] : 'No capital',
+        flag: country.flags.png
+      };
+      
+      // Opcionalmente, enviar datos a Lambda en AWS
+      // Esta función se activaría cuando se selecciona un país
+      sendCountryDataToLambda(countryData);
+      
+      // Centrar el mapa en el país seleccionado
+      setCenter([country.latlng[0], country.latlng[1]]);
+      setMapZoom(5); // Zoom para ver el país completo
+      
+      // Añadir como ubicación seleccionada
+      const newLocation = {
+        id: Date.now(),
+        position: [country.latlng[0], country.latlng[1]],
+        name: country.name.common,
+        fullName: country.capital ? `${country.name.common}, Capital: ${country.capital[0]}` : country.name.common,
+        flag: country.flags.png
+      };
+      
+      setSelectedLocations(prevLocations => [...prevLocations, newLocation]);
+    }
+  };
+  
+  // Función para enviar datos a AWS Lambda
+  const sendCountryDataToLambda = (countryData) => {
+    fetch("arn:aws:lambda:us-east-2:378153983451:function:MapCountrySelector", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(countryData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Success:", data);
+    })
+    .catch((error) => {
+      console.error("Error sending data to Lambda:", error);
+    });
+  };
+
   // Función para limpiar el campo de búsqueda
   const clearSearch = () => {
     setSearchText('');
@@ -199,11 +290,78 @@ export default function Mapa() {
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
+    .countries-container {
+      position: absolute;
+      top: 70px;
+      right: 10px;
+      width: 250px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      max-height: calc(100% - 100px);
+      display: flex;
+      flex-direction: column;
+    }
+    .countries-header {
+      padding: 10px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+      border-radius: 4px 4px 0 0;
+      font-weight: bold;
+    }
+    .countries-search {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .countries-list {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    .country-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    .country-item:hover {
+      background-color: #f5f5f5;
+    }
+    .country-flag {
+      width: 24px;
+      height: 16px;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    .country-name {
+      flex-grow: 1;
+      font-size: 14px;
+    }
   `;
+
+  useEffect(() => {
+    const map = mapRef.current?.leafletElement || mapRef.current?._leaflet_map;
+  
+    if (!map) return;
+  
+    fetch("https://c6nfvjmdpj.execute-api.us-east-2.amazonaws.com/dev")
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data).addTo(map);
+      })
+      .catch(err => {
+        console.error("Error cargando GeoJSON desde Lambda:", err);
+      });
+  }, []);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Estilos personalizados para los controles de zoom */}
+      {/* Estilos personalizados */}
       <style>{customMapStyle}</style>
       
       {/* Mensaje de ayuda para el usuario */}
@@ -216,7 +374,7 @@ export default function Mapa() {
         position: 'absolute', 
         top: '10px', 
         left: '10px', 
-        right: '10px', 
+        right: '270px', // Ajustado para dejar espacio para la lista de países
         zIndex: 1000 
       }}>
         <div style={{ position: 'relative' }}>
@@ -321,6 +479,49 @@ export default function Mapa() {
           </ul>
         )}
       </div>
+      
+      {/* Lista de países */}
+      <div className="countries-container">
+        <div className="countries-header">
+          Lista de Países
+        </div>
+        <div className="countries-search">
+          <input
+            type="text"
+            value={countrySearch}
+            onChange={(e) => setCountrySearch(e.target.value)}
+            placeholder="Buscar país..."
+            style={{ 
+              width: '100%', 
+              padding: '8px', 
+              borderRadius: '4px',
+              border: '1px solid #ccc'
+            }}
+          />
+        </div>
+        {loadingCountries ? (
+          <div style={{ padding: '15px', textAlign: 'center' }}>
+            Cargando países...
+          </div>
+        ) : (
+          <ul className="countries-list">
+            {filteredCountries.map((country, index) => (
+              <li 
+                key={index}
+                className="country-item"
+                onClick={() => handleCountrySelect(country)}
+              >
+                <img 
+                  src={country.flags.png} 
+                  alt={`Bandera de ${country.name.common}`}
+                  className="country-flag"
+                />
+                <span className="country-name">{country.name.common}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Mapa Leaflet */}
       <MapContainer
@@ -346,6 +547,13 @@ export default function Mapa() {
           <Marker key={location.id} position={location.position}>
             <Popup>
               <div>
+                {location.flag && (
+                  <img 
+                    src={location.flag} 
+                    alt={`Bandera de ${location.name}`}
+                    style={{ width: '100%', maxHeight: '40px', marginBottom: '8px' }}
+                  />
+                )}
                 <strong>{location.name}</strong>
                 <p style={{ fontSize: '12px', margin: '5px 0' }}>{location.fullName}</p>
                 <button 
