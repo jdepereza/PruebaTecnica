@@ -349,7 +349,7 @@ export default function Mapa() {
   
     if (!map) return;
   
-    fetch("https://c6nfvjmdpj.execute-api.us-east-2.amazonaws.com/dev")
+    fetch("https://oeii28px3c.execute-api.us-east-2.amazonaws.com/prod")
       .then(res => res.json())
       .then(data => {
         L.geoJSON(data).addTo(map);
