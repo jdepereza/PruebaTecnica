@@ -242,7 +242,7 @@ export default function Mapa() {
   
   // Función para enviar datos a AWS Lambda
   const sendCountryDataToLambda = (countryData) => {
-    fetch("arn:aws:lambda:us-east-2:378153983451:function:MapCountrySelector", {
+    fetch("https://oeii28px3c.execute-api.us-east-2.amazonaws.com/prod", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
