@@ -242,7 +242,7 @@ export default function Mapa() {
   
   // Función para enviar datos a AWS Lambda
   const sendCountryDataToLambda = (countryData) => {
-    fetch("https://oeii28px3c.execute-api.us-east-2.amazonaws.com/prod", {
+    fetch("https://32gfxlm9i4.execute-api.us-east-2.amazonaws.com/dev", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -349,7 +349,7 @@ export default function Mapa() {
   
     if (!map) return;
   
-    fetch("https://oeii28px3c.execute-api.us-east-2.amazonaws.com/prod")
+    fetch("https://32gfxlm9i4.execute-api.us-east-2.amazonaws.com/dev")
       .then(res => res.json())
       .then(data => {
         L.geoJSON(data).addTo(map);
