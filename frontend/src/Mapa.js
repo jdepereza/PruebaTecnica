@@ -243,13 +243,22 @@ export default function Mapa() {
   // Función para enviar datos a AWS Lambda
   const sendCountryDataToLambda = (countryData) => {
     fetch("https://32gfxlm9i4.execute-api.us-east-2.amazonaws.com/dev", {
+      mode: 'no-cors',
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(countryData)
     })
-    .then(response => response.json())
+    .then(response => {
+      console.log("Respuesta recibida:", response.type);
+      // No intentes analizar como JSON cuando usas no-cors
+      // Si la respuesta es "opaque", no podrás acceder a su contenido
+      if (response.type !== 'opaque') {
+        return response.json();
+      }
+      return { success: true, message: "Datos enviados (respuesta opaca)" };
+    })
     .then(data => {
       console.log("Success:", data);
     })
@@ -349,7 +358,7 @@ export default function Mapa() {
   
     if (!map) return;
   
-    fetch("https://32gfxlm9i4.execute-api.us-east-2.amazonaws.com/dev")
+    fetch("https://c6nfvjmdpj.execute-api.us-east-2.amazonaws.com/dev")
       .then(res => res.json())
       .then(data => {
         L.geoJSON(data).addTo(map);
