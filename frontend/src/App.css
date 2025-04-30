@@ -1,132 +1,109 @@
-:root {
-  --primary: #4a90e2;
-  --bg: #f5f7fa;
-  --card-bg: #fff;
-  --text: #333;
-}
-
+/* Estilos generales de la app */
 body {
   margin: 0;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
 }
 
 .App {
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 1rem;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 15px;
 }
 
+/* Estilos para el encabezado */
 .header {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 30px;
 }
 
 .header h1 {
+  color: #3498db;
+  font-size: 2.5rem;
   margin: 0;
-  color: var(--primary);
 }
 
+/* Estilos para tarjetas de contenido */
 .card {
-  background: var(--card-bg);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
 }
 
+.card h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+/* Estilos específicos para la tarjeta del mapa */
 .map-card {
   padding: 0;
-}
-
-.message {
-  font-size: 1.1rem;
-}
-
-.btn-group {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.btn-group .btn {
-  flex: 1;
-  max-width: 200px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.2s;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.btn:hover {
-  background: #357ab8;
+  overflow: hidden;
 }
 
 .map-container {
   width: 100%;
-  height: 400px;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  height: 600px;
+  position: relative;
 }
 
-/* Añadir al final de App.css */
-.search-container {
-  margin-bottom: 10px;
-}
-
-.input-autocomplete {
-  width: 100%;
-  padding: 10px 15px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
+/* Estilos para el mensaje del backend */
+.message {
+  background-color: #f1f8ff;
+  padding: 15px;
+  border-left: 4px solid #3498db;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  box-sizing: border-box;
 }
 
-.suggestions-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 300px;
-  overflow-y: auto;
-  background-color: white;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+/* Estilos para los botones */
+.btn-group {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
-.suggestions-list li {
-  padding: 10px 15px;
+.btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
 }
 
-.suggestions-list li:hover {
-  background-color: #f5f7fa;
+.btn:hover {
+  background-color: #2980b9;
 }
 
-.suggestions-list li:last-child {
-  border-bottom: none;
+/* Estilos para el modo responsivo */
+@media (max-width: 768px) {
+  .App {
+    margin: 10px;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .map-container {
+    height: 450px;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
 }
 
-.loading-indicator {
-  background: white;
-  padding: 10px;
-  text-align: center;
-  color: #666;
-  border-bottom: 1px solid #eee;
+/* Estilos para los controles Leaflet */
+.leaflet-control-container .leaflet-top.leaflet-left {
+  top: 70px !important;
 }

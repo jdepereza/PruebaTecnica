@@ -280,79 +280,6 @@ export default function Mapa() {
     );
   };
 
-  // Estilo personalizado para empujar los controles de zoom hacia abajo
-  const customMapStyle = `
-    .leaflet-top.leaflet-left {
-      top: 70px !important;
-    }
-    .map-click-info {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      z-index: 1000;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-    .countries-container {
-      position: absolute;
-      top: 70px;
-      right: 10px;
-      width: 250px;
-      background: white;
-      border-radius: 4px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      z-index: 1000;
-      max-height: calc(100% - 100px);
-      display: flex;
-      flex-direction: column;
-    }
-    .countries-header {
-      padding: 10px;
-      background: #f5f5f5;
-      border-bottom: 1px solid #ddd;
-      border-radius: 4px 4px 0 0;
-      font-weight: bold;
-    }
-    .countries-search {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-    }
-    .countries-list {
-      overflow-y: auto;
-      flex-grow: 1;
-      padding: 0;
-      margin: 0;
-      list-style: none;
-    }
-    .country-item {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: background-color 0.2s;
-    }
-    .country-item:hover {
-      background-color: #f5f5f5;
-    }
-    .country-flag {
-      width: 24px;
-      height: 16px;
-      margin-right: 10px;
-      object-fit: cover;
-    }
-    .country-name {
-      flex-grow: 1;
-      font-size: 14px;
-    }
-  `;
-
   useEffect(() => {
     const map = mapRef.current?.leafletElement || mapRef.current?._leaflet_map;
   
@@ -369,132 +296,229 @@ export default function Mapa() {
   }, []);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Estilos personalizados */}
-      <style>{customMapStyle}</style>
-      
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex' }}>
       {/* Mensaje de ayuda para el usuario */}
-      <div className="map-click-info">
+      <div style={{ 
+        position: 'absolute', 
+        bottom: '20px', 
+        left: '50%', 
+        transform: 'translateX(-50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '8px 16px',
+        borderRadius: '20px',
+        fontSize: '14px',
+        zIndex: 1000,
+        pointerEvents: 'none',
+        transition: 'opacity 0.3s ease'
+      }}>
         Haz doble clic en cualquier lugar del mapa para seleccionar una ubicación
       </div>
       
-      {/* Barra de búsqueda */}
-      <div className="search-control" style={{ 
-        position: 'absolute', 
-        top: '10px', 
-        left: '10px', 
-        right: '270px', // Ajustado para dejar espacio para la lista de países
-        zIndex: 1000 
-      }}>
-        <div style={{ position: 'relative' }}>
-          <input
-            type="text"
-            value={searchText}
-            onChange={handleSearchChange}
-            placeholder="Buscar ubicación (ciudad, dirección, lugar)"
-            className="input-autocomplete"
-            style={{ 
-              width: '100%', 
-              padding: '10px', 
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          />
-          
-          {searchText && (
-            <button 
-              onClick={clearSearch}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '16px'
+      {/* Contenedor principal del mapa (izquierda) */}
+      <div style={{ position: 'relative', flexGrow: 1, height: '100%' }}>
+        {/* Barra de búsqueda */}
+        <div style={{ 
+          position: 'absolute', 
+          top: '10px', 
+          left: '10px', 
+          right: '30px',
+          zIndex: 1000 
+        }}>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={searchText}
+              onChange={handleSearchChange}
+              placeholder="Buscar ubicación (ciudad, dirección, lugar)"
+              style={{ 
+                width: '100%', 
+                padding: '10px', 
+                borderRadius: '4px',
+                border: '1px solid #ccc',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}
-            >
-              ✕
-            </button>
+            />
+            
+            {searchText && (
+              <button 
+                onClick={clearSearch}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          
+          {loading && (
+            <div style={{ 
+              background: 'white', 
+              padding: '10px', 
+              borderRadius: '0 0 4px 4px',
+              border: '1px solid #ccc',
+              borderTop: 'none',
+              textAlign: 'center'
+            }}>
+              Cargando sugerencias...
+            </div>
+          )}
+          
+          {suggestions.length > 0 && (
+            <ul style={{ 
+              listStyle: 'none',
+              margin: '0',
+              padding: '0',
+              background: 'white',
+              border: '1px solid #ccc',
+              borderTop: 'none',
+              borderRadius: '0 0 4px 4px',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}>
+              {suggestions.map((suggestion, index) => {
+                // Determinar el tipo de ubicación
+                let type = 'Lugar';
+                if (suggestion.type === 'city' || suggestion.type === 'administrative') {
+                  type = 'Ciudad';
+                } else if (suggestion.address && (
+                  suggestion.address.hospital || 
+                  suggestion.address.hotel || 
+                  suggestion.address.restaurant)
+                ) {
+                  type = 'Establecimiento';
+                } else if (suggestion.address && suggestion.address.road) {
+                  type = 'Dirección';
+                }
+                
+                return (
+                  <li 
+                    key={index} 
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    style={{ 
+                      padding: '10px',
+                      borderBottom: index < suggestions.length - 1 ? '1px solid #eee' : 'none',
+                      cursor: 'pointer'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    <div style={{ fontWeight: 'bold' }}>
+                      {suggestion.display_name.split(',')[0]}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      {suggestion.display_name.split(',').slice(1).join(',')}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>
+                      {type}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
         
-        {loading && (
-          <div style={{ 
-            background: 'white', 
-            padding: '10px', 
-            borderRadius: '0 0 4px 4px',
-            border: '1px solid #ccc',
-            borderTop: 'none',
-            textAlign: 'center'
-          }}>
-            Cargando sugerencias...
-          </div>
-        )}
-        
-        {suggestions.length > 0 && (
-          <ul style={{ 
-            listStyle: 'none',
-            margin: '0',
-            padding: '0',
-            background: 'white',
-            border: '1px solid #ccc',
-            borderTop: 'none',
-            borderRadius: '0 0 4px 4px',
-            maxHeight: '200px',
-            overflowY: 'auto'
-          }}>
-            {suggestions.map((suggestion, index) => {
-              // Determinar el tipo de ubicación
-              let type = 'Lugar';
-              if (suggestion.type === 'city' || suggestion.type === 'administrative') {
-                type = 'Ciudad';
-              } else if (suggestion.address && (
-                suggestion.address.hospital || 
-                suggestion.address.hotel || 
-                suggestion.address.restaurant)
-              ) {
-                type = 'Establecimiento';
-              } else if (suggestion.address && suggestion.address.road) {
-                type = 'Dirección';
-              }
-              
-              return (
-                <li 
-                  key={index} 
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  style={{ 
-                    padding: '10px',
-                    borderBottom: index < suggestions.length - 1 ? '1px solid #eee' : 'none',
-                    cursor: 'pointer'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  <div style={{ fontWeight: 'bold' }}>
-                    {suggestion.display_name.split(',')[0]}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
-                    {suggestion.display_name.split(',').slice(1).join(',')}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>
-                    {type}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        {/* Mapa Leaflet */}
+        <MapContainer
+          center={initialCenter}
+          zoom={13}
+          style={{ width: '100%', height: '100%' }}
+          ref={mapRef}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="© OpenStreetMap contributors"
+          />
+          
+          {/* Componente para cambiar la vista del mapa y manejar eventos */}
+          <MapEvents 
+            center={center} 
+            zoom={mapZoom} 
+            onMapClick={handleMapClick} 
+          />
+          
+          {/* Marcadores para cada ubicación seleccionada */}
+          {selectedLocations.map((location) => (
+            <Marker key={location.id} position={location.position}>
+              <Popup>
+                <div>
+                  {location.flag && (
+                    <img 
+                      src={location.flag} 
+                      alt={`Bandera de ${location.name}`}
+                      style={{ width: '100%', maxHeight: '40px', marginBottom: '8px' }}
+                    />
+                  )}
+                  <strong>{location.name}</strong>
+                  <p style={{ fontSize: '12px', margin: '5px 0' }}>{location.fullName}</p>
+                  <button 
+                    onClick={() => removeLocation(location.id)}
+                    style={{
+                      padding: '3px 8px',
+                      background: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+          
+          {/* Marcador temporal para la ubicación clickeada */}
+          {clickMarker && (
+            <Marker 
+              position={[clickMarker.lat, clickMarker.lng]}
+              opacity={0.7}
+            >
+              <Popup autoOpen={true}>
+                <div>
+                  <p style={{ margin: '5px 0' }}>Obteniendo información...</p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+        </MapContainer>
       </div>
       
-      {/* Lista de países */}
-      <div className="countries-container">
-        <div className="countries-header">
+      {/* Lista de países (a la derecha) */}
+      <div style={{ 
+        width: '250px',
+        background: 'white',
+        borderRadius: '4px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        borderLeft: '1px solid #ddd'
+      }}>
+        <div style={{
+          padding: '10px',
+          background: '#f5f5f5',
+          borderBottom: '1px solid #ddd',
+          borderRadius: '4px 4px 0 0',
+          fontWeight: 'bold'
+        }}>
           Lista de Países
         </div>
-        <div className="countries-search">
+        <div style={{
+          padding: '10px',
+          borderBottom: '1px solid #eee'
+        }}>
           <input
             type="text"
             value={countrySearch}
@@ -513,91 +537,49 @@ export default function Mapa() {
             Cargando países...
           </div>
         ) : (
-          <ul className="countries-list">
+          <ul style={{
+            overflowY: 'auto',
+            flexGrow: 1,
+            padding: 0,
+            margin: 0,
+            listStyle: 'none'
+          }}>
             {filteredCountries.map((country, index) => (
               <li 
                 key={index}
-                className="country-item"
                 onClick={() => handleCountrySelect(country)}
+                style={{
+                  padding: '10px',
+                  borderBottom: '1px solid #eee',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
               >
                 <img 
                   src={country.flags.png} 
                   alt={`Bandera de ${country.name.common}`}
-                  className="country-flag"
+                  style={{
+                    width: '24px',
+                    height: '16px',
+                    marginRight: '10px',
+                    objectFit: 'cover'
+                  }}
                 />
-                <span className="country-name">{country.name.common}</span>
+                <span style={{
+                  flexGrow: 1,
+                  fontSize: '14px'
+                }}>
+                  {country.name.common}
+                </span>
               </li>
             ))}
           </ul>
         )}
       </div>
-
-      {/* Mapa Leaflet */}
-      <MapContainer
-        center={initialCenter}
-        zoom={13}
-        style={{ width: '100%', height: '100%' }}
-        ref={mapRef}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="© OpenStreetMap contributors"
-        />
-        
-        {/* Componente para cambiar la vista del mapa y manejar eventos */}
-        <MapEvents 
-          center={center} 
-          zoom={mapZoom} 
-          onMapClick={handleMapClick} 
-        />
-        
-        {/* Marcadores para cada ubicación seleccionada */}
-        {selectedLocations.map((location) => (
-          <Marker key={location.id} position={location.position}>
-            <Popup>
-              <div>
-                {location.flag && (
-                  <img 
-                    src={location.flag} 
-                    alt={`Bandera de ${location.name}`}
-                    style={{ width: '100%', maxHeight: '40px', marginBottom: '8px' }}
-                  />
-                )}
-                <strong>{location.name}</strong>
-                <p style={{ fontSize: '12px', margin: '5px 0' }}>{location.fullName}</p>
-                <button 
-                  onClick={() => removeLocation(location.id)}
-                  style={{
-                    padding: '3px 8px',
-                    background: '#f44336',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        
-        {/* Marcador temporal para la ubicación clickeada */}
-        {clickMarker && (
-          <Marker 
-            position={[clickMarker.lat, clickMarker.lng]}
-            opacity={0.7}
-          >
-            <Popup autoOpen={true}>
-              <div>
-                <p style={{ margin: '5px 0' }}>Obteniendo información...</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-      </MapContainer>
     </div>
   );
 }
